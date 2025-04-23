@@ -2,7 +2,7 @@
 
 An interactive Streamlit-based data science project analyzing batter performance and dismissal patterns in the Indian Premier League (IPL) T20 competition from 2018 to 2024.
 
-Built by **Sai Arun**, **Mustafa**, and **Mitali**, the tool leverages detailed ball-by-ball data—including line, length, control, wagon wheel coordinates, and dismissal types—to provide actionable insights for cricket enthusiasts, analysts, and teams.
+The tool leverages detailed ball-by-ball data—including line, length, control, wagon wheel coordinates, and dismissal types—to provide actionable insights for cricket enthusiasts, analysts, and teams.
 
 ---
 
