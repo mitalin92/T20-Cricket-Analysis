@@ -73,7 +73,7 @@ Built by **Sai Arun**, **Mustafa**, and **Mitali**, the tool leverages detailed 
 
 ## 👨‍💼 Contributors
 
-**Mitali**, **Mustafa**, and **Mustafa**  
+**Mitali**, **Mustafa**, and **Arun**  
 _Data Science Lab Project_
 
 ---
