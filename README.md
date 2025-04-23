@@ -1,79 +1,89 @@
+# T20-Cricket IPL Analysis (2018–2024)
 
+An interactive Streamlit-based data science project analyzing batter performance and dismissal patterns in the Indian Premier League (IPL) T20 competition from 2018 to 2024.
 
-## 🏏 T20 IPL Cricket Analysis (2018 to 2024)
+Built by **Sai Arun**, **Mustafa**, and **Mitali**, the tool leverages detailed ball-by-ball data—including line, length, control, wagon wheel coordinates, and dismissal types—to provide actionable insights for cricket enthusiasts, analysts, and teams.
 
-An interactive Streamlit-based data science project that analyzes batter performance and dismissal patterns in the Indian Premier League (IPL) from 2018 to 2024.
+---
 
-Built by Sai Arun, Mustafa, and Mitali, this tool uses ball-by-ball data to generate tactical insights for cricket fans, analysts, and teams. The dataset includes detailed information such as shot direction, line and length, dismissal types, control, bowling style, and more.
+## 🌟 Key Features
 
-## 📌 Features
+### 🔹 Boundary Scoring Visualizations
+- **General Wagon Wheel:** Fixed-length shot visuals for all 4s and 6s
+- **Intelligent Wagon Wheel:** Adjusts shot length dynamically based on shot difficulty
+- **Wagon Zone Wheel:** Maps scoring zones (1 to 8) with strike rate, run contributions, and dismissal risk
 
-Boundary Scoring Visualizations
+### 🔹 Shot and Dismissal Analysis
+- **Line and Length Heatmaps:** Shows dismissal likelihood based on delivery trajectory
+- **Shot Difficulty Score:** Visualizes batter performance across high and low difficulty shots
+- **Control vs. Non-Control:** Compares boundaries and dismissals for controlled vs. uncontrolled shots
 
-    General Wagon Wheel: Fixed-length shot visuals for all 4s and 6s
+### 🔹 Match-Up and Tactical Insights
+- **Bowling Style Matchups:** Compares batter performance against specific bowling styles (e.g., RFM, OB)
+- **Batting Hand vs Bowling Type:** LHB vs RHB comparisons across bowling styles
+- **Phase-Based Dismissals:** Powerplay, middle overs, and death overs impact analysis
 
-    Intelligent Wagon Wheel: Adjusts shot length dynamically based on shot difficulty
+---
 
-    Wagon Zone Wheel: Maps scoring zones (1 to 8) with strike rate, run contributions, and dismissal risk
+## 📚 Dataset
 
-Shot and Dismissal Analysis
+**Source:** IPL_2018_2024.xlsx (ball-by-ball data)
 
-    Line and Length Heatmaps: Shows dismissal likelihood based on delivery trajectory
+**Key Variables:**
+- `bat`: Batter name
+- `batruns`: Runs per delivery
+- `out`, `dismissal`: Wicket status and dismissal type
+- `wagonX`, `wagonY`, `wagonZone`: Shot coordinates and zones
+- `line`, `length`: Delivery trajectory
+- `control`: Controlled vs. uncontrolled shot
+- `bowl_style`, `bowl_kind`: Bowling category
+- `bat_hand`: Left or right-handed
+- `year`, `phase`, `team_bowl`, `team_bat`
 
-    Shot Difficulty Score: Visualizes batter performance across high and low difficulty shots
+---
 
-    Control vs Non-Control: Compares boundaries and dismissals for controlled vs uncontrolled shots
+## 🌐 Project Structure
 
-Match-Up and Tactical Insights
+### Tabs:
+- **Introduction:** Overview of cricket, T20, and IPL
+- **Data Analysis:** 7 sub-tabs with visualizations and tactical suggestions
+- **Help:** Explanation of all variables and filters
 
-    Bowling Style Breakdown: Compare performance against specific bowling styles (e.g., RFM, OB, SLA) using strike rate, boundary percentage, and impact per 100 balls
+### Sidebar Filters:
+- Batter selector
+- Year range slider (2018–2024)
+- Bowler type toggle (All / Spin / Pace)
+- Shot control filter
 
-    Spin vs Pace Analysis: Zone-wise comparison of batting performance
+---
 
-    Pressure Handling: How batters perform after consecutive dot balls
+## 📊 Requirements
+- Python 3.8+
+- Libraries: `streamlit`, `pandas`, `numpy`, `matplotlib`, `seaborn`
 
-    Strategic Takeaways: Highlights weaknesses and strengths for both batters and bowlers
+---
 
-## 📊 Dataset
+## 🚀 Getting Started
 
-Source
+1. Clone the repository
+2. Install dependencies: `pip install -r requirements.txt`
+3. Run the app: `streamlit run app.py`
 
-    IPL_2018_2024.xlsx (ball-by-ball data)
+---
 
-Key Variables
+## 👨‍💼 Contributors
 
-    bat, batruns, dismissal, out
+**Mitali**, **Mustafa**, and **Mustafa**  
+_Data Science Lab Project_
 
-    line, length, wagonX, wagonY, wagonZone
+---
 
-    control, bowl_style, bat_hand, year
+## ✨ Try it out
+Use the sidebar to:
+- Select a player (e.g. Virat Kohli)
+- Filter years (e.g. 2020–2024)
+- Compare across phases (PP, Middle, Death)
+- View heatmaps, tactical tables, and personalized matchups!
 
-  ##  💻 Project Structure
+---
 
-Introduction
-
-    Overview of T20 cricket and the IPL format
-
-Data Analysis Tabs
-
-    Interactive visualizations and metrics across 7 sub-tabs
-
-Help Tab
-
-    Explanation of each variable used
-
-Sidebar Filters
-
-    Select batter
-
-    Filter by year range
-
-    Choose bowler type: All, Spin, or Pace
-
-    Toggle control shots on or off
-
-  ##  👥 Contributors
-
-Mitali, Mustafa, Arun 
-
-Part of the Data Science Lab Capstone Project
