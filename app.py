@@ -771,68 +771,76 @@ def main():
     with tab6:
         st.subheader("Dismissal Prediction Model")
 
-        if sub.empty:
+        required_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'out', 'over']
+        missing_cols = [col for col in required_cols if col not in sub.columns]
+
+        if missing_cols:
+            st.error(f"Missing required columns for model: {', '.join(missing_cols)}")
+        elif sub.empty:
             st.warning("No data available under current filters to train prediction model.")
         else:
-            # Step 1: Preprocess for modeling
-            df_model = sub[[
-                'bat_hand', 'bowl_style', 'line', 'length', 'shot', 'out', 'over'
-            ]].dropna().copy()
+            df_model = sub[required_cols].dropna().copy()
 
-            def get_phase(over):
-                if over <= 6:
-                    return 'Powerplay'
-                elif over <= 15:
-                    return 'Middle'
-                else:
-                    return 'Death'
+            if df_model.empty:
+                st.warning("No usable rows after dropping missing values.")
+            else:
+                # Step 1: Add phase column before selecting features
+                def get_phase(over):
+                    if over <= 6:
+                        return 'Powerplay'
+                    elif over <= 15:
+                        return 'Middle'
+                    else:
+                        return 'Death'
 
                 df_model['phase'] = df_model['over'].apply(get_phase)
 
-            X = df_model[['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'phase']]
-            y = df_model['out']
+                # Step 2: Select features
+                feature_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'phase']
+                X = df_model[feature_cols]
+                y = df_model['out']
 
-            X_encoded = pd.get_dummies(X)
-            X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.3, random_state=42)
+                # Step 3: Encode & Train
+                X_encoded = pd.get_dummies(X)
+                X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.3, random_state=42)
 
-            rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
-            rf_balanced.fit(X_train, y_train)
+                rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
+                rf_balanced.fit(X_train, y_train)
 
-            # Step 2: User input
-            st.markdown("### Enter Match Conditions")
+                # Step 4: User input
+                st.markdown("### Enter Match Conditions")
+                col1, col2 = st.columns(2)
 
-            col1, col2 = st.columns(2)
+                with col1:
+                    bat_hand = st.selectbox("Batter Hand", ['RHB', 'LHB'])
+                    bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
+                    line = st.selectbox("Line", df_model['line'].unique())
 
-            with col1:
-                bat_hand = st.selectbox("Batter Hand", ['RHB', 'LHB'])
-                bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
-                line = st.selectbox("Line", df_model['line'].unique())
+                with col2:
+                    length = st.selectbox("Length", df_model['length'].unique())
+                    shot = st.selectbox("Shot Type", df_model['shot'].unique())
+                    phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
 
-            with col2:
-                length = st.selectbox("Length", df_model['length'].unique())
-                shot = st.selectbox("Shot Type", df_model['shot'].unique())
-                phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
+                # Step 5: Encode user input
+                user_input = pd.DataFrame([{
+                    'bat_hand': bat_hand,
+                    'bowl_style': bowl_style,
+                    'line': line,
+                    'length': length,
+                    'shot': shot,
+                    'phase': phase
+                }])
+                user_encoded = pd.get_dummies(user_input)
+                user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
 
-            # Step 3: Encode example
-            user_input = pd.DataFrame([{
-            'bat_hand': bat_hand,
-            'bowl_style': bowl_style,
-            'line': line,
-            'length': length,
-            'shot': shot,
-            'phase': phase
-            }])
-            user_encoded = pd.get_dummies(user_input)
-            user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+                # Step 6: Predict
+                prediction = rf_balanced.predict(user_encoded)[0]
+                probability = rf_balanced.predict_proba(user_encoded)[0][1]
 
-            # Step 4: Predict
-            prediction = rf_balanced.predict(user_encoded)[0]
-            probability = rf_balanced.predict_proba(user_encoded)[0][1]
+                st.markdown("### Prediction Outcome")
+                st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
+                st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
 
-            st.markdown("### Prediction Outcome")
-            st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
-            st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
-        
         with help_tab:
             st.header("Help: Understanding the Variables")
             st.markdown("""
