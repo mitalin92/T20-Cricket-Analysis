@@ -713,10 +713,10 @@ def main():
             else:
                 st.markdown("**Error**: 'year' column not found.")
 
-    with tab5:
-        st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
+   with tab5:
+    st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
 
-        if "over" in sub.columns and "bowl_style" in sub.columns:
+    if "over" in sub.columns and "bowl_style" in sub.columns:
         # Add phase column
         def get_phase(over):
             if over <= 6:
