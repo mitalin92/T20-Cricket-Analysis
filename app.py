@@ -346,7 +346,7 @@ def main():
         </div>
         """, unsafe_allow_html=True)
 
-        tab1, tab2, tab3, tab4 = st.tabs([
+        tab1, tab2, tab3, tab4, tab5 = st.tabs([
             "Wagon Wheels", "Dismissal Analysis", "Bowling Style Stats",
             "Scoring Patterns Over Time", "Match-up Analysis"
         ])
