@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import Circle, Wedge, Rectangle
 from matplotlib.lines import Line2D
 import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 
 @st.cache_data
 def ld(path="IPL_2018_2024.xlsx"):
