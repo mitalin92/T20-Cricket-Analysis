@@ -769,26 +769,26 @@ def main():
             st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
         with help_tab:
-        st.header("Help: Understanding the Variables")
-        st.markdown("""
-        This section explains the key variables used in the app, based on the dataset `IPL_2018_2024.xlsx`:
+            st.header("Help: Understanding the Variables")
+            st.markdown("""
+            This section explains the key variables used in the app, based on the dataset `IPL_2018_2024.xlsx`:
 
-        - **bat**: Batter’s name.
-        - **batruns**: Runs scored by the batter on a delivery (e.g., 0, 1, 2, 4, 6).
-        - **out**: Indicates if the batter was out (1) or not (0).
-        - **dismissal**: Type of dismissal (e.g., caught, bowled), if applicable.
-        - **wagonX, wagonY**: Coordinates of where the ball landed or was hit, used for wagon wheel visualizations.
-        - **wagonZone**: Zone (1-8) where the ball was hit, representing field areas (e.g., cover, mid-wicket).
-        - **line**: Line of the delivery (e.g., "outside offstump", "down leg").
-        - **length**: Length of the delivery (e.g., "full", "short").
-        - **bowl_style**: Bowling style (e.g., "RF" for Right Fast, "OB" for Off Break).
-        - **year**: Year of the match.
-        - **bat_hand**: Batter’s handedness (e.g., "RHB" for right-handed batter).
-        - **bowler_type**: Derived as "Spin", "Pace", or "Unknown" based on `bowl_style`.
-        - **shot_difficulty**: Calculated metric reflecting how challenging a shot is based on line, length, and zone.
+            -**bat**: Batter’s name.
+            - **batruns**: Runs scored by the batter on a delivery (e.g., 0, 1, 2, 4, 6).
+            - **out**: Indicates if the batter was out (1) or not (0).
+            - **dismissal**: Type of dismissal (e.g., caught, bowled), if applicable.
+            - **wagonX, wagonY**: Coordinates of where the ball landed or was hit, used for wagon wheel visualizations.
+            - **wagonZone**: Zone (1-8) where the ball was hit, representing field areas (e.g., cover, mid-wicket).
+            - **line**: Line of the delivery (e.g., "outside offstump", "down leg").
+            - **length**: Length of the delivery (e.g., "full", "short").
+            - **bowl_style**: Bowling style (e.g., "RF" for Right Fast, "OB" for Off Break).
+            - **year**: Year of the match.
+            - **bat_hand**: Batter’s handedness (e.g., "RHB" for right-handed batter).
+            - **bowler_type**: Derived as "Spin", "Pace", or "Unknown" based on `bowl_style`.
+            - **shot_difficulty**: Calculated metric reflecting how challenging a shot is based on line, length, and zone.
 
-        These variables drive the visualizations and insights, helping analyze batter performance in the IPL context.
-        """)
+            These variables drive the visualizations and insights, helping analyze batter performance in the IPL context.
+            """)
 
 if __name__ == "__main__":
     main()
