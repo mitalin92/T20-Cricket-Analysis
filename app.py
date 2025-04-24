@@ -13,7 +13,7 @@ def ld(path="IPL_2018_2024.xlsx"):
     cols = [
         "bat", "batruns", "out", "dismissal",
         "wagonX", "wagonY", "wagonZone", "line", "length",
-        "bowl_style", "year", "bat_hand", "over", "ballfaced"
+        "bowl_style", "year", "bat_hand", "over", "ballfaced", "shot"
     ]
     df = df[[c for c in cols if c in df.columns]].drop_duplicates()
     if "year" in df.columns:
