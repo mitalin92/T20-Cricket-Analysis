@@ -719,7 +719,7 @@ def main():
         st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
 
         if "over" in sub.columns and "bowl_style" in sub.columns:
-        # Add phase column
+            # Add phase column
             def get_phase(over):
                 if over <= 6:
                     return 'Powerplay'
@@ -730,44 +730,65 @@ def main():
 
             sub["phase"] = sub["over"].apply(get_phase)
 
-            matchup_df = sub.groupby(["bowl_style", "phase"]).agg(
-            balls_faced=("ballfaced", "sum"),
-            runs_scored=("batruns", "sum"),
-            dismissals=("out", "sum")
+        
+            style_counts = sub["bowl_style"].value_counts()
+            valid_styles = style_counts[style_counts >= 4000].index.tolist()
+            filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
+
+            style_names = {
+                'RF': 'Right-arm Fast',
+                'RM': 'Right-arm Medium',
+                'RFM': 'Right-arm Fast Medium',
+                'RMF': 'Right-arm Medium Fast',
+                'LF': 'Left-arm Fast',
+                'LFM': 'Left-arm Fast Medium',
+                'LMF': 'Left-arm Medium Fast',
+                'LM': 'Left-arm Medium',
+                'OB': 'Off Break',
+                'LB': 'Leg Break',
+                'LBG': 'Leg Break Googly',
+                'LWS': 'Left-arm Wrist Spin',
+                'SLA': 'Slow Left-arm Orthodox'
+            }
+            filtered_sub["bowl_style_full"] = filtered_sub["bowl_style"].map(style_names).fillna(filtered_sub["bowl_style"])
+
+        
+            matchup_df = filtered_sub.groupby(["bowl_style_full", "phase"]).agg(
+                balls_faced=("ballfaced", "sum"),
+                runs_scored=("batruns", "sum"),
+                dismissals=("out", "sum")
             ).reset_index()
 
             matchup_df["strike_rate"] = (matchup_df["runs_scored"] / matchup_df["balls_faced"]) * 100
             matchup_df["average"] = matchup_df.apply(
-            lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
+                lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
             )
 
             def get_tactic(row):
                 if row["average"] <= 25 and row["strike_rate"] <= 110:
-                    return f"✅ Use {row['bowl_style']} in {row['phase']}"
+                    return f"✅ Use {row['bowl_style_full']} in {row['phase']}"
                 elif row["average"] >= 35 and row["strike_rate"] >= 130:
-                    return f"❌ Avoid {row['bowl_style']} in {row['phase']}"
+                    return f"❌ Avoid {row['bowl_style_full']} in {row['phase']}"
                 else:
-                    return f"🟡 Neutral vs {row['bowl_style']} in {row['phase']}"
+                    return None
 
             matchup_df["tactic"] = matchup_df.apply(get_tactic, axis=1)
+            matchup_df = matchup_df[matchup_df["tactic"].notna()]
 
-            # Clean + round for display
             matchup_df["strike_rate"] = matchup_df["strike_rate"].round(1)
             matchup_df["average"] = matchup_df["average"].apply(lambda x: round(x, 1) if math.isfinite(x) else "∞")
 
-            # Show the final DataFrame
             st.dataframe(matchup_df[[
-                "bowl_style", "phase", "balls_faced", "runs_scored", 
-                "strike_rate", "average", "tactic"
-            ]])
+            "bowl_style_full", "phase", "balls_faced", "runs_scored", 
+            "strike_rate", "average", "tactic"
+            ]].rename(columns={"bowl_style_full": "Bowling Style"}))
 
             st.markdown("""
             **Tactical Guide**:
-        -     ✅ *Use*: This phase-style combo is effective for dismissing or containing the batter.
-        -     ❌ *Avoid*: Batter dominates in this situation — high SR & Avg.
-        -     🟡 *Neutral*: No clear advantage either way.
+            - ✅ *Use*: Batter underperforms — low SR and low Avg. Bowl this combo more.
+            - ❌ *Avoid*: Batter dominates — high SR and high Avg. Avoid this match-up.
             """)
-        else:
+            else:
             st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
     with tab6:
