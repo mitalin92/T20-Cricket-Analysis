@@ -788,8 +788,8 @@ def main():
             - ✅ *Use*: Batter underperforms — low SR and low Avg. Bowl this combo more.
             - ❌ *Avoid*: Batter dominates — high SR and high Avg. Avoid this match-up.
             """)
-            else:
-                st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
+        else:
+            st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
     with tab6:
         st.subheader("Dismissal Prediction Model")
