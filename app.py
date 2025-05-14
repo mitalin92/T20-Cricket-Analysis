@@ -773,7 +773,7 @@ def main():
     with tab6:
         st.subheader("Dismissal Prediction Model")
 
-        required_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'out', 'over']
+        required_cols = ['length', 'bowl_style', 'over', 'out']
         missing_cols = [col for col in required_cols if col not in sub.columns]
 
         if missing_cols:
@@ -786,7 +786,7 @@ def main():
             if df_model.empty:
                 st.warning("No usable rows after dropping missing values.")
             else:
-                # Step 1: Add phase column before selecting features
+                # Step 1: Add phase
                 def get_phase(over):
                     if over <= 6:
                         return 'Powerplay'
@@ -797,51 +797,48 @@ def main():
 
                 df_model['phase'] = df_model['over'].apply(get_phase)
 
-                # Step 2: Select features
-                feature_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'phase']
+                # Step 2: Features & Target
+                feature_cols = ['length', 'bowl_style', 'phase']
                 X = df_model[feature_cols]
                 y = df_model['out']
 
                 # Step 3: Encode & Train
                 X_encoded = pd.get_dummies(X)
-                X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.3, random_state=42)
+                X_train, X_test, y_train, y_test = train_test_split(
+                X_encoded, y, test_size=0.3, random_state=42
+            )
 
-                rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
-                rf_balanced.fit(X_train, y_train)
+            rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
+            rf_balanced.fit(X_train, y_train)
 
-                # Step 4: User input
-                st.markdown("### Enter Match Conditions")
-                col1, col2 = st.columns(2)
+            # Step 4: UI inputs
+            st.markdown("### Enter Match Conditions")
+            col1, col2 = st.columns(2)
 
-                with col1:
-                    bat_hand = st.selectbox("Batter Hand", ['RHB', 'LHB'])
-                    bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
-                    line = st.selectbox("Line", df_model['line'].unique())
+            with col1:
+                bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
+                length = st.selectbox("Ball Length", df_model['length'].unique())
 
-                with col2:
-                    length = st.selectbox("Length", df_model['length'].unique())
-                    shot = st.selectbox("Shot Type", df_model['shot'].unique())
-                    phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
+            with col2:
+                phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
 
-                # Step 5: Encode user input
-                user_input = pd.DataFrame([{
-                    'bat_hand': bat_hand,
-                    'bowl_style': bowl_style,
-                    'line': line,
-                    'length': length,
-                    'shot': shot,
-                    'phase': phase
-                }])
-                user_encoded = pd.get_dummies(user_input)
-                user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+            # Step 5: Encode user input
+            user_input = pd.DataFrame([{
+                'bowl_style': bowl_style,
+                'length': length,
+                'phase': phase
+            }])
+            user_encoded = pd.get_dummies(user_input)
+            user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
 
-                # Step 6: Predict
-                prediction = rf_balanced.predict(user_encoded)[0]
-                probability = rf_balanced.predict_proba(user_encoded)[0][1]
+            # Step 6: Predict
+            prediction = rf_balanced.predict(user_encoded)[0]
+            probability = rf_balanced.predict_proba(user_encoded)[0][1]
 
-                st.markdown("### Prediction Outcome")
-                st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
-                st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
+            st.markdown("### Prediction Outcome")
+            st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
+            st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
+
 
         with help_tab:
             st.header("Help: Understanding the Variables")
