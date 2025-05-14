@@ -719,7 +719,7 @@ def main():
         st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
 
         if "over" in sub.columns and "bowl_style" in sub.columns:
-            # Add phase column
+        # Phase calculator
             def get_phase(over):
                 if over <= 6:
                     return 'Powerplay'
@@ -730,11 +730,10 @@ def main():
 
             sub["phase"] = sub["over"].apply(get_phase)
 
-        
             style_counts = sub["bowl_style"].value_counts()
             valid_styles = style_counts[style_counts >= 4000].index.tolist()
             filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
-
+    
             style_names = {
                 'RF': 'Right-arm Fast',
                 'RM': 'Right-arm Medium',
@@ -750,20 +749,20 @@ def main():
                 'LWS': 'Left-arm Wrist Spin',
                 'SLA': 'Slow Left-arm Orthodox'
             }
+
             filtered_sub["bowl_style_full"] = filtered_sub["bowl_style"].map(style_names).fillna(filtered_sub["bowl_style"])
 
-        
             matchup_df = filtered_sub.groupby(["bowl_style_full", "phase"]).agg(
                 balls_faced=("ballfaced", "sum"),
                 runs_scored=("batruns", "sum"),
                 dismissals=("out", "sum")
             ).reset_index()
-
+    
             matchup_df["strike_rate"] = (matchup_df["runs_scored"] / matchup_df["balls_faced"]) * 100
             matchup_df["average"] = matchup_df.apply(
                 lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
             )
-
+    
             def get_tactic(row):
                 if row["average"] <= 25 and row["strike_rate"] <= 110:
                     return f"✅ Use {row['bowl_style_full']} in {row['phase']}"
@@ -771,18 +770,18 @@ def main():
                     return f"❌ Avoid {row['bowl_style_full']} in {row['phase']}"
                 else:
                     return None
-
+    
             matchup_df["tactic"] = matchup_df.apply(get_tactic, axis=1)
-            matchup_df = matchup_df[matchup_df["tactic"].notna()]
-
+            matchup_df = matchup_df[matchup_df["tactic"].notna()]  # Drop neutrals
+    
             matchup_df["strike_rate"] = matchup_df["strike_rate"].round(1)
             matchup_df["average"] = matchup_df["average"].apply(lambda x: round(x, 1) if math.isfinite(x) else "∞")
-
+    
             st.dataframe(matchup_df[[
-            "bowl_style_full", "phase", "balls_faced", "runs_scored", 
-            "strike_rate", "average", "tactic"
+                "bowl_style_full", "phase", "balls_faced", "runs_scored", 
+                "strike_rate", "average", "tactic"
             ]].rename(columns={"bowl_style_full": "Bowling Style"}))
-
+    
             st.markdown("""
             **Tactical Guide**:
             - ✅ *Use*: Batter underperforms — low SR and low Avg. Bowl this combo more.
