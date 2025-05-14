@@ -789,7 +789,7 @@ def main():
             - ❌ *Avoid*: Batter dominates — high SR and high Avg. Avoid this match-up.
             """)
             else:
-            st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
+                st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
     with tab6:
         st.subheader("Dismissal Prediction Model")
