@@ -844,13 +844,18 @@ def main():
         st.markdown("Discover detailed insights into cricket fundamentals, visualizations, and tactical strategies tailored for T20 analysis, explore performance metrics, dismissal predictions, and a quick start guide to enhance your understanding of the game, and dive into essential terms, bowling techniques, and data-driven insights to master T20 cricket analytics!")
         with st.expander("📚 Cricket 101: Essential Terms"):
             st.markdown("""
-            Cricket is a popular sport played between two teams of 11 players. Key terms:
-            - **Runs 🏃‍♂️**: Points scored by batters.
-            - **Boundary** <span title="A shot that reaches the edge of the field, scoring 4 or 6 runs.">🚩</span>: Ball hits (4 runs) or crosses boundary without bouncing (6 runs).
-            - **Dismissal** <span title="Ending a batter’s innings (e.g., caught, bowled).">🚫</span>: Ending batter’s innings through various methods.
-            - **Strike Rate (SR)** <span title="Shows how quickly a batter scores. It's runs scored per 100 balls faced. Higher SR means faster scoring.">💥</span>: `(Runs ÷ Balls faced) × 100`
-            - **Batting Average** <span title="Shows how consistent a batter is. It's the average runs scored before getting out.">🏏</span>: `Runs ÷ Dismissals`
+            <div style="font-size: 16px">
+                <p><strong>Cricket</strong> is a popular sport played between two teams of 11 players. Key terms:</p>
+                <ul>
+                    <li><strong>Runs 🏃‍♂️</strong>: Points scored by batters.</li>
+                    <li><strong>Boundary</strong> <span title="A shot that reaches the edge of the field, scoring 4 or 6 runs.">🚩</span>: Ball hits (4 runs) or crosses boundary without bouncing (6 runs).</li>
+                    <li><strong>Dismissal</strong> <span title="Ending a batter’s innings (e.g., caught, bowled).">🚫</span>: Ending batter’s innings through various methods.</li>
+                    <li><strong>Strike Rate (SR)</strong> <span title="Shows how quickly a batter scores. It's runs scored per 100 balls faced. Higher SR means faster scoring.">💥</span>: <code>(Runs ÷ Balls faced) × 100</code></li>
+                    <li><strong>Batting Average</strong> <span title="Shows how consistent a batter is. It's the average runs scored before getting out.">🏏</span>: <code>Runs ÷ Dismissals</code></li>
+                </ul>
+            </div>
             """, unsafe_allow_html=True)
+
         with st.expander("🎯 Bowling Lines and Lengths"):
             st.markdown("""
             **Line (Horizontal direction 🎳):**
