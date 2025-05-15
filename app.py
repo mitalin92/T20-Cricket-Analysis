@@ -276,9 +276,7 @@ def main():
     else:
         year_range = None
     bowler_type = st.sidebar.radio("Bowler Type", ["All", "Spin", "Pace"])
-    generate_button = st.sidebar.button("Generate")
-    st.sidebar.markdown("---")
-    st.sidebar.write("Click 'Generate' to run the analysis with the selected parameters.")
+    
 
     # Tabs
     intro_tab, analysis_tab, help_tab = st.tabs(["Introduction", "Data Analysis", "Help"])
