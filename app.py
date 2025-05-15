@@ -302,58 +302,58 @@ def main():
         The IPL not only entertains millions but also serves as a data-rich platform for analysis, blending sport with cutting-edge analytics, as explored in this app.
         """)
 
-    with analysis_tab:
-        st.header("Data Analysis")
+        with analysis_tab:
+            st.header("Data Analysis")
+            
+            sub = df[df["bat"] == selected_batter].copy()
         
-        sub = df[df["bat"] == selected_batter].copy()
-    
-        if year_range and "year" in sub.columns:
-            sub = sub[(sub["year"] >= year_range[0]) & (sub["year"] <= year_range[1])]
-    
-        if bowler_type != "All":
-            sub = sub[sub["bowler_type"] == bowler_type]
-    
-        if sub.empty:
-            st.warning("No data found for the selected filters.")
-        else:
-            sub = shift_coords(sub)
-            sub = sd(sub)
-    
-            hand = "RHB/LHB?"
-            if "bat_hand" in sub.columns and sub["bat_hand"].dropna().size > 0:
-                hand = sub["bat_hand"].dropna().iloc[0]
-    
-            total_runs = sub["batruns"].sum()
-            balls_faced = len(sub)
-            outs = sub["dismissal"].notna().sum()
-            sr_val = 100 * total_runs / balls_faced if balls_faced > 0 else 0
-            bound_ct = sub[sub["batruns"].isin([4, 6])].shape[0]
-            bound_pct = 100 * bound_ct / balls_faced if balls_faced > 0 else 0
-            dot_ct = sub[sub["batruns"] == 0].shape[0]
-            dot_pct = 100 * dot_ct / balls_faced if balls_faced > 0 else 0
-            ave_val = total_runs / outs if outs > 0 else float("inf")
-    
-            st.markdown(f"""
-            <div style='background-color:#1e1e1e; color:white; padding:20px; border-radius:5px; margin-bottom:20px;'>
-              <h2>{selected_batter} | {hand}</h2>
-              <p>
-                Runs: {total_runs} | 
-                Balls: {balls_faced} | 
-                SR: {sr_val:.2f} | 
-                Boundary%: {bound_pct:.2f}% | 
-                Dot%: {dot_pct:.2f}% | 
-                Ave: {"∞" if ave_val == float("inf") else f"{ave_val:.2f}"}
-              </p>
-            </div>
-            """, unsafe_allow_html=True)
-    
-            tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                "Wagon Wheels", 
-                "Scoring Patterns Over Time", 
-                "Dismissal Analysis",
-                "Match-up Analysis", 
-                "Prediction Model"
-            ])
+            if year_range and "year" in sub.columns:
+                sub = sub[(sub["year"] >= year_range[0]) & (sub["year"] <= year_range[1])]
+        
+            if bowler_type != "All":
+                sub = sub[sub["bowler_type"] == bowler_type]
+        
+            if sub.empty:
+                st.warning("No data found for the selected filters.")
+            else:
+                sub = shift_coords(sub)
+                sub = sd(sub)
+        
+                hand = "RHB/LHB?"
+                if "bat_hand" in sub.columns and sub["bat_hand"].dropna().size > 0:
+                    hand = sub["bat_hand"].dropna().iloc[0]
+        
+                total_runs = sub["batruns"].sum()
+                balls_faced = len(sub)
+                outs = sub["dismissal"].notna().sum()
+                sr_val = 100 * total_runs / balls_faced if balls_faced > 0 else 0
+                bound_ct = sub[sub["batruns"].isin([4, 6])].shape[0]
+                bound_pct = 100 * bound_ct / balls_faced if balls_faced > 0 else 0
+                dot_ct = sub[sub["batruns"] == 0].shape[0]
+                dot_pct = 100 * dot_ct / balls_faced if balls_faced > 0 else 0
+                ave_val = total_runs / outs if outs > 0 else float("inf")
+        
+                st.markdown(f"""
+                <div style='background-color:#1e1e1e; color:white; padding:20px; border-radius:5px; margin-bottom:20px;'>
+                  <h2>{selected_batter} | {hand}</h2>
+                  <p>
+                    Runs: {total_runs} | 
+                    Balls: {balls_faced} | 
+                    SR: {sr_val:.2f} | 
+                    Boundary%: {bound_pct:.2f}% | 
+                    Dot%: {dot_pct:.2f}% | 
+                    Ave: {"∞" if ave_val == float("inf") else f"{ave_val:.2f}"}
+                  </p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+                tab1, tab2, tab3, tab4, tab5 = st.tabs([
+                    "Wagon Wheels", 
+                    "Scoring Patterns Over Time", 
+                    "Dismissal Analysis",
+                    "Match-up Analysis", 
+                    "Prediction Model"
+                ])
 
                 with tab1:
                     st.subheader("Boundary Wagon Wheel: General vs. Intelligent")
