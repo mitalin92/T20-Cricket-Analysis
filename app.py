@@ -848,8 +848,8 @@ def main():
             - **Runs 🏃‍♂️**: Points scored by batters.
             - **Boundary** <span title="A shot that reaches the edge of the field, scoring 4 or 6 runs.">🚩</span>: Ball hits (4 runs) or crosses boundary without bouncing (6 runs).
             - **Dismissal** <span title="Ending a batter’s innings (e.g., caught, bowled).">🚫</span>: Ending batter’s innings through various methods.
-            - **Strike Rate (SR)** <span title="Runs scored per 100 balls faced, reflecting batting aggressiveness.">💥</span>: `(Runs ÷ Balls faced) × 100`.
-            - **Batting Average** <span title="Runs divided by dismissals, indicating consistency.">🏏</span>: `Runs ÷ Dismissals`.
+            - **Strike Rate (SR)** <span title="Shows how quickly a batter scores. It's runs scored per 100 balls faced. Higher SR means faster scoring.">💥</span>: `(Runs ÷ Balls faced) × 100`
+            - **Batting Average** <span title="Shows how consistent a batter is. It's the average runs scored before getting out.">🏏</span>: `Runs ÷ Dismissals`
             """, unsafe_allow_html=True)
         with st.expander("🎯 Bowling Lines and Lengths"):
             st.markdown("""
