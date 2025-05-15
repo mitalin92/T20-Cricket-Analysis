@@ -733,7 +733,7 @@ def main():
                     else:
                         st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
-                with tab5:
+               with tab6:
                     st.subheader("Dismissal Prediction Model")
                 
                     required_cols = ['length', 'bowl_style', 'over', 'out']
@@ -744,10 +744,29 @@ def main():
                     elif sub.empty:
                         st.warning("No data available under current filters to train prediction model.")
                     else:
-                        # Step 0: Filter for valid bowling styles based on full dataset (df)
+                        # Step 1: Filter valid bowling styles (>=4000 deliveries) from FULL dataset
                         style_counts = df["bowl_style"].value_counts()
                         valid_styles = style_counts[style_counts >= 4000].index.tolist()
-                        
+                
+                        style_name_map = {
+                            'RF': 'Right-arm Fast',
+                            'RM': 'Right-arm Medium',
+                            'RFM': 'Right-arm Fast Medium',
+                            'RMF': 'Right-arm Medium Fast',
+                            'LF': 'Left-arm Fast',
+                            'LFM': 'Left-arm Fast Medium',
+                            'LMF': 'Left-arm Medium Fast',
+                            'LM': 'Left-arm Medium',
+                            'OB': 'Off Break',
+                            'LB': 'Leg Break',
+                            'LBG': 'Leg Break Googly',
+                            'LWS': 'Left-arm Wrist Spin',
+                            'SLA': 'Slow Left-arm Orthodox'
+                        }
+                
+                        # Invert the map for reverse lookup
+                        name_style_map = {v: k for k, v in style_name_map.items()}
+                
                         filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
                 
                         if filtered_sub.empty:
@@ -758,7 +777,7 @@ def main():
                             if df_model.empty:
                                 st.warning("No usable rows after dropping missing values.")
                             else:
-                                # Step 1: Add phase column
+                                # Step 2: Add phase
                                 def get_phase(over):
                                     if over <= 6:
                                         return 'Powerplay'
@@ -769,47 +788,51 @@ def main():
                 
                                 df_model['phase'] = df_model['over'].apply(get_phase)
                 
-                                # Step 2: Select features & target
+                                # Step 3: Feature prep
                                 feature_cols = ['length', 'bowl_style', 'phase']
                                 X = df_model[feature_cols]
                                 y = df_model['out']
-                
-                                # Step 3: Encode & train
                                 X_encoded = pd.get_dummies(X)
+                
+                                # Step 4: Train model
                                 X_train, X_test, y_train, y_test = train_test_split(
                                     X_encoded, y, test_size=0.3, random_state=42
                                 )
-                
                                 rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
                                 rf_balanced.fit(X_train, y_train)
                 
-                                # Step 4: UI inputs
+                                # Step 5: UI Inputs
                                 st.markdown("### Enter Match Conditions")
                                 col1, col2 = st.columns(2)
                 
                                 with col1:
-                                    bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
-                                    length = st.selectbox("Ball Length", df_model['length'].unique())
-                
+                                    bowl_style_display = st.selectbox("Bowling Style", sorted([style_name_map[s] for s in df_model['bowl_style'].unique()]))
+                                    length = st.selectbox("Ball Length", sorted(df_model['length'].unique()))
                                 with col2:
                                     phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
                 
-                                # Step 5: Encode user input
-                                user_input = pd.DataFrame([{
-                                    'bowl_style': bowl_style,
-                                    'length': length,
-                                    'phase': phase
-                                }])
-                                user_encoded = pd.get_dummies(user_input)
-                                user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+                                generate_button = st.button("Generate Prediction")
                 
-                                # Step 6: Prediction
-                                prediction = rf_balanced.predict(user_encoded)[0]
-                                probability = rf_balanced.predict_proba(user_encoded)[0][1]
+                                if generate_button:
+                                    # Step 6: Map user input back to internal codes
+                                    bowl_style_code = name_style_map[bowl_style_display]
                 
-                                st.markdown("### Prediction Outcome")
-                                st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
-                                st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
+                                    user_input = pd.DataFrame([{
+                                        'bowl_style': bowl_style_code,
+                                        'length': length,
+                                        'phase': phase
+                                    }])
+                                    user_encoded = pd.get_dummies(user_input)
+                                    user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+                
+                                    # Step 7: Prediction
+                                    prediction = rf_balanced.predict(user_encoded)[0]
+                                    probability = rf_balanced.predict_proba(user_encoded)[0][1]
+                
+                                    st.markdown("### Prediction Outcome")
+                                    st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
+                                    st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
+                
 
 
     with help_tab:
