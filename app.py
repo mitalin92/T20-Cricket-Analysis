@@ -696,7 +696,7 @@ def main():
                     else:
                         st.write("No bowling style data found.")
 
-               with tab5:
+                with tab5:
                     st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
                 
                     if "over" in sub.columns and "bowl_style" in sub.columns:
