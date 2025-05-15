@@ -304,7 +304,7 @@ def main():
 
     with analysis_tab:
         st.header("Data Analysis")
-            sub = df[df["bat"] == selected_batter].copy()
+        sub = df[df["bat"] == selected_batter].copy()
             if year_range and "year" in sub.columns:
                 sub = sub[(sub["year"] >= year_range[0]) & (sub["year"] <= year_range[1])]
             if bowler_type != "All":
