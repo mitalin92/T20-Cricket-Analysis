@@ -354,6 +354,30 @@ def main():
         ])
 
         with tab1:
+            
+            st.markdown("""
+            ### Understanding the Wagon Wheels
+
+            - **Traditional Wagon Wheel**: Shows the direction of boundary shots with equal-length lines. It's useful to quickly see shot directions but does not reflect shot difficulty.
+            
+            - **Intelligent Wagon Wheel**: Scales boundary lines by shot difficulty. Longer lines mean higher-scoring, harder-to-play shots. It adds context to performance — showing not just *where* a batter scored, but *how tough* the shots were.
+            
+            - **Zone Wheel**:  
+                Splits the field into 8 fixed wedges. Each zone shows:
+                - Balls faced
+                - Runs scored
+                - Strike Rate (SR)
+                - Dismissals
+                - % of Total Runs
+
+                The darker the wedge, the more dominant that zone is.
+
+            Use this tab to analyze:
+            - Shot directions
+            - Boundary trends
+            - Zone strengths/weaknesses
+            - Predictability and aggression
+            """)
             st.subheader("Boundary Wagon Wheel: General vs. Intelligent")
             fig, (ax_left, ax_right) = plt.subplots(ncols=2, figsize=(14, 6))
             bdf = wagonGen(sub, ax_left)
@@ -380,6 +404,8 @@ def main():
                 zone_difficulty = bdf.groupby("wagonZone")["magnitude_raw"].mean().sort_values(ascending=False)
                 hardest_zone = zone_difficulty.idxmax() if not zone_difficulty.empty else "N/A"
                 hardest_zone_value = zone_difficulty.max() if not zone_difficulty.empty else 0
+                aggression_score = sixes / fours if fours else sixes
+                boundaries_per_100 = (total_boundaries / balls_faced) * 100
 
                 st.markdown(f"""
                 **Insights**:
@@ -387,7 +413,10 @@ def main():
                 - **Favorite Zone**: The most common zone for boundaries is Zone {most_common_zone}, accounting for {zone_percentage:.1f}% of boundaries.
                 - **Side Preference**: {selected_batter} favors the {side_preference}, with {off_side_pct:.1f}% of boundaries on the off-side and {leg_side_pct:.1f}% on the leg-side.
                 - **Shot Difficulty**: The intelligent wagon wheel highlights Zone {hardest_zone} as the area where {selected_batter} excels in difficult shots (average weighted score: {hardest_zone_value:.1f}).
+                - **Aggression Score**: {aggression_score:.2f}  
+                - **Boundaries per 100 Balls**: {boundaries_per_100:.1f}
                 - **Takeaway**: {selected_batter} could focus on diversifying shot selection to reduce predictability, while bowlers might target less dominant zones to restrict boundary scoring.
+                - A high aggression score indicates a preference for big hitting (6s over 4s).
                 """)
             else:
                 st.markdown("**Insights**: No boundaries recorded for this selection.")
@@ -715,104 +744,65 @@ def main():
             else:
                 st.markdown("**Error**: 'year' column not found.")
 
-        with tab5:
-            st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
-        
-            if "over" in sub.columns and "bowl_style" in sub.columns:
-                # Add phase column
-                def get_phase(over):
-                    if over <= 6:
-                        return 'Powerplay'
-                    elif over <= 15:
-                        return 'Middle'
-                    else:
-                        return 'Death'
-        
-                sub["phase"] = sub["over"].apply(get_phase)
-        
-                # Filter bowl styles with at least 4000 deliveries globally
-                style_counts = df["bowl_style"].value_counts()
-                valid_styles = style_counts[style_counts >= 4000].index.tolist()
-                filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
-        
-                if filtered_sub.empty:
-                    st.warning("No valid data after filtering bowl styles with ≥4000 deliveries.")
-                else:
-                    # Bowl style full names
-                    style_names = {
-                        'RF': 'Right-arm Fast',
-                        'RM': 'Right-arm Medium',
-                        'RFM': 'Right-arm Fast Medium',
-                        'RMF': 'Right-arm Medium Fast',
-                        'LF': 'Left-arm Fast',
-                        'LFM': 'Left-arm Fast Medium',
-                        'LMF': 'Left-arm Medium Fast',
-                        'LM': 'Left-arm Medium',
-                        'OB': 'Off Break',
-                        'LB': 'Leg Break',
-                        'LBG': 'Leg Break Googly',
-                        'LWS': 'Left-arm Wrist Spin',
-                        'SLA': 'Slow Left-arm Orthodox'
-                    }
-        
-                    filtered_sub["bowl_style_full"] = filtered_sub["bowl_style"].map(style_names).fillna(filtered_sub["bowl_style"])
-        
-                    # Group by bowling style + phase
-                    matchup_df = filtered_sub.groupby(["bowl_style_full", "phase"]).agg(
-                        balls_faced=("ballfaced", "sum"),
-                        runs_scored=("batruns", "sum"),
-                        dismissals=("out", "sum")
-                    ).reset_index()
-        
-                    # Metrics
-                    matchup_df["strike_rate"] = (matchup_df["runs_scored"] / matchup_df["balls_faced"]) * 100
-                    matchup_df["average"] = matchup_df.apply(
-                        lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
-                    )
-        
-                    # Drop inf values
-                    matchup_df = matchup_df[np.isfinite(matchup_df["average"])]
-        
-                    # Tactic logic
-                    def get_tactic(row):
-                        if row["average"] <= 25 and row["strike_rate"] <= 110:
-                            return f"✅ Use {row['bowl_style_full']} in {row['phase']}"
-                        elif row["average"] >= 35 and row["strike_rate"] >= 130:
-                            return f"❌ Avoid {row['bowl_style_full']} in {row['phase']}"
-                        else:
-                            return None
-        
-                    matchup_df["tactic"] = matchup_df.apply(get_tactic, axis=1)
-                    matchup_df = matchup_df[matchup_df["tactic"].notna()]
-        
-                    # Round off
-                    matchup_df["strike_rate"] = matchup_df["strike_rate"].round(1)
-                    matchup_df["average"] = matchup_df["average"].round(1)
-        
-                    # Final table: remove balls_faced, runs_scored → add dismissals
-                    final_df = matchup_df[[
-                        "bowl_style_full", "phase", "dismissals", "strike_rate", "average", "tactic"
-                    ]].rename(columns={"bowl_style_full": "Bowling Style"})
-                    final_df.reset_index(drop=True, inplace=True)
-        
-                    if final_df.empty:
-                        st.warning(f"No match-up patterns found for {selected_batter}.")
-                    else:
-                        st.dataframe(final_df)
-        
-                        st.markdown("""
-                        ### Tactical Guide:
-                        - ✅ **Use**: Batter underperforms — low SR and Avg. Bowl this combo more.
-                        - ❌ **Avoid**: Batter dominates — high SR and Avg. Avoid this combo.
-                        """)
-            else:
-                st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
+    with tab5:
+        st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
 
+        if "over" in sub.columns and "bowl_style" in sub.columns:
+        # Add phase column
+            def get_phase(over):
+                if over <= 6:
+                    return 'Powerplay'
+                elif over <= 15:
+                    return 'Middle'
+                else:
+                    return 'Death'
+
+            sub["phase"] = sub["over"].apply(get_phase)
+
+            matchup_df = sub.groupby(["bowl_style", "phase"]).agg(
+            balls_faced=("ballfaced", "sum"),
+            runs_scored=("batruns", "sum"),
+            dismissals=("out", "sum")
+            ).reset_index()
+
+            matchup_df["strike_rate"] = (matchup_df["runs_scored"] / matchup_df["balls_faced"]) * 100
+            matchup_df["average"] = matchup_df.apply(
+            lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
+            )
+
+            def get_tactic(row):
+                if row["average"] <= 25 and row["strike_rate"] <= 110:
+                    return f"✅ Use {row['bowl_style']} in {row['phase']}"
+                elif row["average"] >= 35 and row["strike_rate"] >= 130:
+                    return f"❌ Avoid {row['bowl_style']} in {row['phase']}"
+                else:
+                    return f"🟡 Neutral vs {row['bowl_style']} in {row['phase']}"
+
+            matchup_df["tactic"] = matchup_df.apply(get_tactic, axis=1)
+
+            # Clean + round for display
+            matchup_df["strike_rate"] = matchup_df["strike_rate"].round(1)
+            matchup_df["average"] = matchup_df["average"].apply(lambda x: round(x, 1) if math.isfinite(x) else "∞")
+
+            # Show the final DataFrame
+            st.dataframe(matchup_df[[
+                "bowl_style", "phase", "balls_faced", "runs_scored", 
+                "strike_rate", "average", "tactic"
+            ]])
+
+            st.markdown("""
+            **Tactical Guide**:
+        -     ✅ *Use*: This phase-style combo is effective for dismissing or containing the batter.
+        -     ❌ *Avoid*: Batter dominates in this situation — high SR & Avg.
+        -     🟡 *Neutral*: No clear advantage either way.
+            """)
+        else:
+            st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
     with tab6:
         st.subheader("Dismissal Prediction Model")
 
-        required_cols = ['length', 'bowl_style', 'over', 'out']
+        required_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'out', 'over']
         missing_cols = [col for col in required_cols if col not in sub.columns]
 
         if missing_cols:
@@ -825,7 +815,7 @@ def main():
             if df_model.empty:
                 st.warning("No usable rows after dropping missing values.")
             else:
-                # Step 1: Add phase
+                # Step 1: Add phase column before selecting features
                 def get_phase(over):
                     if over <= 6:
                         return 'Powerplay'
@@ -836,52 +826,85 @@ def main():
 
                 df_model['phase'] = df_model['over'].apply(get_phase)
 
-                # Step 2: Features & Target
-                feature_cols = ['length', 'bowl_style', 'phase']
+                # Step 2: Select features
+                feature_cols = ['bat_hand', 'bowl_style', 'line', 'length', 'shot', 'phase']
                 X = df_model[feature_cols]
                 y = df_model['out']
 
                 # Step 3: Encode & Train
                 X_encoded = pd.get_dummies(X)
-                X_train, X_test, y_train, y_test = train_test_split(
-                X_encoded, y, test_size=0.3, random_state=42
-            )
+                X_train, X_test, y_train, y_test = train_test_split(X_encoded, y, test_size=0.3, random_state=42)
 
-            rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
-            rf_balanced.fit(X_train, y_train)
+                rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
+                rf_balanced.fit(X_train, y_train)
 
-            # Step 4: UI inputs
-            st.markdown("### Enter Match Conditions")
-            col1, col2 = st.columns(2)
+                # Step 4: User input
+                st.markdown("### Enter Match Conditions")
+                col1, col2 = st.columns(2)
 
-            with col1:
-                bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
-                length = st.selectbox("Ball Length", df_model['length'].unique())
+                with col1:
+                    bat_hand = st.selectbox("Batter Hand", ['RHB', 'LHB'])
+                    bowl_style = st.selectbox("Bowling Style", df_model['bowl_style'].unique())
+                    line = st.selectbox("Line", df_model['line'].unique())
 
-            with col2:
-                phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
+                with col2:
+                    length = st.selectbox("Length", df_model['length'].unique())
+                    shot = st.selectbox("Shot Type", df_model['shot'].unique())
+                    phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
 
-            # Step 5: Encode user input
-            user_input = pd.DataFrame([{
-                'bowl_style': bowl_style,
-                'length': length,
-                'phase': phase
-            }])
-            user_encoded = pd.get_dummies(user_input)
-            user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+                # Step 5: Encode user input
+                user_input = pd.DataFrame([{
+                    'bat_hand': bat_hand,
+                    'bowl_style': bowl_style,
+                    'line': line,
+                    'length': length,
+                    'shot': shot,
+                    'phase': phase
+                }])
+                user_encoded = pd.get_dummies(user_input)
+                user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
 
-            # Step 6: Predict
-            prediction = rf_balanced.predict(user_encoded)[0]
-            probability = rf_balanced.predict_proba(user_encoded)[0][1]
+                # Step 6: Predict
+                prediction = rf_balanced.predict(user_encoded)[0]
+                probability = rf_balanced.predict_proba(user_encoded)[0][1]
 
-            st.markdown("### Prediction Outcome")
-            st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
-            st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
-
+                st.markdown("### Prediction Outcome")
+                st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
+                st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
 
         with help_tab:
             st.header("Help: Understanding the Variables")
             st.markdown("""
+                        
+            ### How to Read Visuals
+
+            - ** Boundary Wagon Wheel**:  
+            A circular plot that displays all 4s and 6s hit by the batter. Green lines = 4s, Purple lines = 6s.  
+            Use this to identify shot direction and boundary zones.
+
+            - ** Intelligent Wagon Wheel**:  
+            Similar to the traditional wheel, but boundary lines are scaled by *shot difficulty*. Longer lines = harder shots.  
+            Helps understand where batters perform under pressure.
+
+            - ** Wagon Zone Wheel**:  
+            The field is divided into 8 fixed zones (1 to 8), clockwise from cover region.  
+            
+                Each wedge shows:
+                Balls played,
+                Runs scored,
+                Strike Rate (SR),
+                % of total runs
+                Use this to analyze zone-wise dominance or weaknesses.
+
+            - ** Dismissal Heatmaps**:  
+            Bar and heatmap visuals that reveal patterns in dismissal by *length*, *line*, and *zone*.  
+            Darker = more dismissals. Bowlers can exploit these trends.
+
+            - ** Prediction Model**:  
+            A ML model trained to predict dismissal probability based on match context (bowling style, line, shot type, etc.).
+
+
+            
             This section explains the key variables used in the app, based on the dataset `IPL_2018_2024.xlsx`:
 
             -**bat**: Batter’s name.
@@ -899,6 +922,30 @@ def main():
             - **shot_difficulty**: Calculated metric reflecting how challenging a shot is based on line, length, and zone.
 
             These variables drive the visualizations and insights, helping analyze batter performance in the IPL context.
+            
+            ---
+            ###  Important Metrics Used
+
+            - **Strike Rate (SR)** = `(Runs / Balls Faced) × 100`  
+            - **Average (Ave)** = `Runs / Dismissals`  
+            - **Shot Difficulty (SD)** = Measures how rare a shot is in a specific zone based on line & length.
+            - **Boundary%** = `% of balls that resulted in 4 or 6`  
+            - **Dot%** = `% of balls with no run scored`  
+            - **Impact/100 Balls** =  
+            \(\left(\frac{\text{Runs} - 20 \times \text{Dismissals}}{\text{Balls}}\right) \times 100\)  
+            Penalizes dismissals. A higher value = more impactful batting.
+
+            ---
+            
+            ### Key Use-Cases
+
+            - Identify **strong & weak zones** of batters.
+            - See **preferred lengths & lines** that yield dismissals.
+            - Recommend **match-up tactics** by bowler type and match phase.
+            - Predict **likelihood of dismissal** using a machine learning model.
+            
+            ---
+            
             """)
 
 if __name__ == "__main__":
