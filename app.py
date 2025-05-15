@@ -733,7 +733,7 @@ def main():
                     else:
                         st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
 
-               with tab5:
+                with tab5:
                     st.subheader("Dismissal Prediction Model")
                 
                     required_cols = ['length', 'bowl_style', 'over', 'out']
