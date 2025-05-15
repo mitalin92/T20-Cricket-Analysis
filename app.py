@@ -650,57 +650,9 @@ def main():
                         st.markdown("**Error**: 'line' or 'length' column missing.")
 
                 with tab4:
-                    st.subheader("Specifications w.r.t Bowl Style")
-                    sty_table = tab(sub, df_global)
-                    if not sty_table.empty:
-                        st.dataframe(sty_table)
-                        max_sr_row = sty_table.loc[sty_table['SR'].idxmax()]
-                        max_sr_style = max_sr_row['Bowl Style']
-                        max_sr_value = max_sr_row['SR']
-                        max_sr_balls = max_sr_row['Balls']
-                        non_zero_runs = sty_table[sty_table['Runs'] > 0]
-                        if not non_zero_runs.empty:
-                            min_sr_row = non_zero_runs.loc[non_zero_runs['SR'].idxmin()]
-                            min_sr_style = min_sr_row['Bowl Style']
-                            min_sr_value = min_sr_row['SR']
-                            min_sr_balls = min_sr_row['Balls']
-                            min_sr_text = f"- **Least Comfortable Style**: {selected_batter} struggles against {min_sr_style}, with a strike rate of {min_sr_value:.1f} over {min_sr_balls} balls."
-                        else:
-                            min_sr_text = "- **Least Comfortable Style**: No bowling styles resulted in runs scored."
-                        max_dismiss_row = sty_table.loc[sty_table['Dismissals'].idxmax()]
-                        max_dismiss_style = max_dismiss_row['Bowl Style']
-                        max_dismiss_count = max_dismiss_row['Dismissals']
-                        max_dismiss_balls = max_dismiss_row['Balls']
-                        max_boundary_row = sty_table.loc[sty_table['Boundary%'].idxmax()]
-                        max_boundary_style = max_boundary_row['Bowl Style']
-                        max_boundary_pct = max_boundary_row['Boundary%']
-                        max_boundary_balls = max_boundary_row['Balls']
-                        max_dot_row = sty_table.loc[sty_table['Dot%'].idxmax()]
-                        max_dot_style = max_dot_row['Bowl Style']
-                        max_dot_pct = max_dot_row['Dot%']
-                        max_dot_balls = max_dot_row['Balls']
-                        max_impact_row = sty_table.loc[sty_table['Impact/100b'].idxmax()]
-                        max_impact_style = max_impact_row['Bowl Style']
-                        max_impact_value = max_impact_row['Impact/100b']
-                        max_impact_balls = max_impact_row['Balls']
-                        st.markdown(f"""
-                        **Insights**:
-                        - **Most Comfortable Style**: {selected_batter} scores freely against {max_sr_style}, with a strike rate of {max_sr_value:.1f} over {max_sr_balls} balls.
-                        {min_sr_text}
-                        - **Most Dangerous Style**: {max_dismiss_style} has dismissed {selected_batter} {max_dismiss_count} times over {max_dismiss_balls} balls, making it the most effective.
-                        - **Most Aggressive Against**: {selected_batter} hits boundaries most frequently against {max_boundary_style}, with a boundary percentage of {max_boundary_pct:.1f}% over {max_boundary_balls} balls.
-                        - **Most Restrictive Style**: {max_dot_style} restricts {selected_batter} the most, with a dot ball percentage of {max_dot_pct:.1f}% over {max_dot_balls} balls.
-                        - **Highest Impact Style**: {max_impact_style} has the highest impact against {selected_batter}, with an impact of {max_impact_value:.1f} per 100 balls over {max_impact_balls} balls.
-                        - **Takeaway**: {selected_batter} should work on improving scoring against {max_dot_style} to reduce dot balls and be cautious against {max_dismiss_style} to avoid dismissals. Bowlers should use {max_dismiss_style} to target {selected_batter}'s weaknesses.
-                        """)
-                    else:
-                        st.write("No bowling style data found.")
-
-                with tab5:
                     st.subheader(f"Match-Up Analysis by Phase and Bowling Style: {selected_batter}")
                 
                     if "over" in sub.columns and "bowl_style" in sub.columns:
-                        # Add phase column
                         def get_phase(over):
                             if over <= 6:
                                 return 'Powerplay'
@@ -711,7 +663,6 @@ def main():
                 
                         sub["phase"] = sub["over"].apply(get_phase)
                 
-                        # Filter bowl styles with at least 4000 deliveries globally
                         style_counts = df["bowl_style"].value_counts()
                         valid_styles = style_counts[style_counts >= 4000].index.tolist()
                         filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
@@ -719,7 +670,6 @@ def main():
                         if filtered_sub.empty:
                             st.warning("No valid data after filtering bowl styles with ≥4000 deliveries.")
                         else:
-                            # Bowl style full names
                             style_names = {
                                 'RF': 'Right-arm Fast',
                                 'RM': 'Right-arm Medium',
@@ -737,24 +687,20 @@ def main():
                             }
                 
                             filtered_sub["bowl_style_full"] = filtered_sub["bowl_style"].map(style_names).fillna(filtered_sub["bowl_style"])
-                
-                            # Group by bowling style + phase
+
                             matchup_df = filtered_sub.groupby(["bowl_style_full", "phase"]).agg(
                                 balls_faced=("ballfaced", "sum"),
                                 runs_scored=("batruns", "sum"),
                                 dismissals=("out", "sum")
                             ).reset_index()
                 
-                            # Metrics
                             matchup_df["strike_rate"] = (matchup_df["runs_scored"] / matchup_df["balls_faced"]) * 100
                             matchup_df["average"] = matchup_df.apply(
                                 lambda x: x["runs_scored"] / x["dismissals"] if x["dismissals"] > 0 else float("inf"), axis=1
                             )
                 
-                            # Drop inf values
                             matchup_df = matchup_df[np.isfinite(matchup_df["average"])]
                 
-                            # Tactic logic
                             def get_tactic(row):
                                 if row["average"] <= 25 and row["strike_rate"] <= 110:
                                     return f"✅ Use {row['bowl_style_full']} in {row['phase']}"
@@ -766,11 +712,9 @@ def main():
                             matchup_df["tactic"] = matchup_df.apply(get_tactic, axis=1)
                             matchup_df = matchup_df[matchup_df["tactic"].notna()]
                 
-                            # Round off
                             matchup_df["strike_rate"] = matchup_df["strike_rate"].round(1)
                             matchup_df["average"] = matchup_df["average"].round(1)
                 
-                            # Final table: remove balls_faced, runs_scored → add dismissals
                             final_df = matchup_df[[
                                 "bowl_style_full", "phase", "dismissals", "strike_rate", "average", "tactic"
                             ]].rename(columns={"bowl_style_full": "Bowling Style"})
@@ -788,6 +732,104 @@ def main():
                                 """)
                     else:
                         st.warning("Required columns 'over' or 'bowl_style' not found in dataset.")
+
+                with tab5:
+                    st.subheader("Dismissal Prediction Model")
+                
+                    required_cols = ['length', 'bowl_style', 'over', 'out']
+                    missing_cols = [col for col in required_cols if col not in sub.columns]
+                
+                    if missing_cols:
+                        st.error(f"Missing required columns for model: {', '.join(missing_cols)}")
+                    elif sub.empty:
+                        st.warning("No data available under current filters to train prediction model.")
+                    else:
+                        # ✅ Filter bowling styles based on global data
+                        style_counts = df["bowl_style"].value_counts()
+                        valid_styles = style_counts[style_counts >= 4000].index.tolist()
+                        filtered_sub = sub[sub["bowl_style"].isin(valid_styles)].copy()
+                
+                        if filtered_sub.empty:
+                            st.warning("No valid data after filtering bowl styles with ≥4000 deliveries.")
+                        else:
+                            # ✅ Full form style names
+                            style_names = {
+                                'RF': 'Right-arm Fast',
+                                'RM': 'Right-arm Medium',
+                                'RFM': 'Right-arm Fast Medium',
+                                'RMF': 'Right-arm Medium Fast',
+                                'LF': 'Left-arm Fast',
+                                'LFM': 'Left-arm Fast Medium',
+                                'LMF': 'Left-arm Medium Fast',
+                                'LM': 'Left-arm Medium',
+                                'OB': 'Off Break',
+                                'LB': 'Leg Break',
+                                'LBG': 'Leg Break Googly',
+                                'LWS': 'Left-arm Wrist Spin',
+                                'SLA': 'Slow Left-arm Orthodox'
+                            }
+                
+                            # Map full names for UI dropdown
+                            filtered_sub["bowl_style_full"] = filtered_sub["bowl_style"].map(style_names).fillna(filtered_sub["bowl_style"])
+                
+                            df_model = filtered_sub[required_cols + ["bowl_style_full"]].dropna().copy()
+                
+                            # Step 1: Add phase
+                            def get_phase(over):
+                                if over <= 6:
+                                    return 'Powerplay'
+                                elif over <= 15:
+                                    return 'Middle'
+                                else:
+                                    return 'Death'
+                
+                            df_model['phase'] = df_model['over'].apply(get_phase)
+                
+                            # Step 2: Features & Target
+                            feature_cols = ['length', 'bowl_style', 'phase']
+                            X = df_model[feature_cols]
+                            y = df_model['out']
+                
+                            # Step 3: Encode & Train
+                            X_encoded = pd.get_dummies(X)
+                            X_train, X_test, y_train, y_test = train_test_split(
+                                X_encoded, y, test_size=0.3, random_state=42
+                            )
+                
+                            rf_balanced = RandomForestClassifier(class_weight='balanced', random_state=42)
+                            rf_balanced.fit(X_train, y_train)
+                
+                            # Step 4: UI inputs
+                            st.markdown("### Enter Match Conditions")
+                            col1, col2 = st.columns(2)
+                
+                            with col1:
+                                full_style_selected = st.selectbox("Bowling Style", df_model['bowl_style_full'].unique())
+                                style_reverse_map = {v: k for k, v in style_names.items()}
+                                bowl_style_code = style_reverse_map.get(full_style_selected, full_style_selected)
+                
+                                length = st.selectbox("Ball Length", df_model['length'].unique())
+                
+                            with col2:
+                                phase = st.selectbox("Match Phase", ['Powerplay', 'Middle', 'Death'])
+                
+                            # Step 5: Encode user input
+                            user_input = pd.DataFrame([{
+                                'bowl_style': bowl_style_code,
+                                'length': length,
+                                'phase': phase
+                            }])
+                            user_encoded = pd.get_dummies(user_input)
+                            user_encoded = user_encoded.reindex(columns=X_encoded.columns, fill_value=0)
+                
+                            # Step 6: Predict
+                            prediction = rf_balanced.predict(user_encoded)[0]
+                            probability = rf_balanced.predict_proba(user_encoded)[0][1]
+                
+                            st.markdown("### Prediction Outcome")
+                            st.write(f"**Will {selected_batter} get out?** {'🟥 Yes' if prediction == 1 else '🟩 No'}")
+                            st.write(f"**Probability of Dismissal:** {round(probability * 100, 2)} %")
+
 
     with help_tab:
         st.header("🏏 T20 Cricket Analytics App: Comprehensive User Guide")
