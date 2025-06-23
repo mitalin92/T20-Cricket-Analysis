@@ -71,13 +71,6 @@ The tool leverages detailed ball-by-ball data—including line, length, control,
 
 ---
 
-## 👨‍💼 Contributors
-
-**Mitali**, **Mustafa**, and **Arun**  
-_Data Science Lab Project_
-
----
-
 ## ✨ Try it out
 Use the sidebar to:
 - Select a player (e.g. Virat Kohli)
